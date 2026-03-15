@@ -1,0 +1,63 @@
+clear all; 
+% close all;
+% clc;
+% load training_process_euqal_dist.mat;
+load Training_5x5_400_256x256.mat;
+filter_size = 5;
+m = filter_size^2 - 1;
+filter_num = 24;
+BASIS = gen_dct2(5);
+BASIS = BASIS(:,2:end);
+%% pad and crop operation
+bsz = 6;
+bndry = [bsz,bsz];
+pad   = @(x) padarray(x,bndry,'symmetric','both');
+crop  = @(x) x(1+bndry(1):end-bndry(1),1+bndry(2):end-bndry(2));
+%% MFs means and precisions
+KernelPara.fsz = filter_size;
+KernelPara.filtN = filter_num;
+KernelPara.basis = BASIS;
+%% MFs means and precisions
+trained_model = save_trained_model(cof, MFS, stage, KernelPara);
+img_idx = 172;
+sigma = 25;
+path = '/home/staff/cheny/FoETraininigSets/trainingImgs/';
+file = strcat(path,sprintf('test_%03d.png', img_idx));
+I0 = double(imread(file));
+randn('seed', 0);
+Im = I0 + sigma*randn(size(I0));
+
+[R,C] = size(I0);
+rms1 = sqrt(mean((Im(:) - I0(:)).^2)) /sigma * 25
+%% run denoising, 15 stages
+input = pad(Im);
+noisy = pad(Im);
+clean = I0;
+diffterm = zeros(size(input));
+run_stage = 8;
+tic;
+for s = 1:run_stage
+    deImg = denoisingOneStepGMixMFs(noisy, input, diffterm, trained_model{s});
+    t = crop(deImg);
+    deImg = pad(t);
+    diffterm = deImg - input;
+    input = deImg;
+    
+    rms = sqrt(mean((t(:) - clean(:)).^2));
+    fprintf('stage = %d, psnr = %f\n',s, 20*log10(255/rms));
+end
+toc
+x_star = t(:);
+%% recover image
+rms2 = sqrt(mean((x_star - I0(:)).^2));
+PSNR = 20*log10(255/rms2);
+recover = reshape(x_star,R,C);
+fprintf('Denoising image %3d\tPSNR: %.3f\n',img_idx,PSNR);
+%% show images
+figure(img_idx);
+subplot(1,3,1);imshow(I0,[0 255]);title('original image');
+subplot(1,3,2);imshow(Im,[0 255]);title('noisy image');
+subplot(1,3,3);imshow(recover,[0 255]);
+str = strcat('denoised image,',sprintf('PSNR:%.3f', PSNR));
+title(str);
+drawnow;
