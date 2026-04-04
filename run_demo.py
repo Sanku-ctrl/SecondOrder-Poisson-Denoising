@@ -1,6 +1,6 @@
 import torch
 from torch.utils.data import DataLoader
-from poisson_tnr.data import PoissonDataset
+from poisson_tnr.data import PoissonDataset, train_val_split
 from poisson_tnr.model import ModelA, ModelB
 from poisson_tnr.train import stagewise_train
 from poisson_tnr.eval import compute_psnr
@@ -8,7 +8,10 @@ from poisson_tnr.eval import compute_psnr
 
 def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    dataset = PoissonDataset(image_dir='TNRD-Codes/TrainingCodes4denoising/FoETrainingSets180', patch_size=64, scale=60.0)
+    image_dir = 'TNRD-Codes/TrainingCodes4denoising/FoETrainingSets180'
+    train_paths, val_paths = train_val_split(image_dir)
+    dataset = PoissonDataset(train_paths, patch_size=64, peak=60.0,
+                             patches_per_image=1, augment=False)
     loader = DataLoader(dataset, batch_size=4, shuffle=True, num_workers=0)
 
     modelA = ModelA(num_stages=3, num_filters=8, kernel_size=5).to(device)
