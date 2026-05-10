@@ -67,6 +67,7 @@ Second-order models use fewer filters but show improved structural propagation, 
 
 ### Requirements
 - Python 3.8+
+- PyTorch
 - Torch
 - Torchvision
 - Pillow
