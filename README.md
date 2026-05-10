@@ -73,6 +73,20 @@ Second-order models use fewer filters but show improved structural propagation, 
 - Pillow
 - NumPy
 
+### Run location
+Model 1 code and data folders are now under `Model_1/`:
+- `Model_1/poisson_tnr/`
+- `Model_1/TNRD-Codes/`
+- `Model_1/checkpoints/`
+- `Model_1/run_demo.py`
+- `Model_1/train_pipeline.py`
+
+To keep existing relative dataset/checkpoint paths working, run commands from inside `Model_1/`:
+
+```bash
+cd Model_1
+```
+
 ---
 
 ## Training
